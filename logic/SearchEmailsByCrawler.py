@@ -29,8 +29,8 @@ from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from scrapy.item import Item
 
 DBNAME = "biz-search"
-DBUSER = "zangli"
-DBPWD = "885988"
+DBUSER = "aaaa"
+DBPWD = "bbbb"
 DBSERVER = "192.168.0.102"
 
 EMAILRE = '[a-zA-Z0-9+_\-\.]+@[0-9a-zA-Z.]*'

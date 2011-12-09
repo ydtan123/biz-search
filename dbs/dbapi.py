@@ -5,8 +5,8 @@ EMAIL_PRIORITY_LOW    = 3
 EMAIL_PRIORITY_MEDIUM = 2
 EMAIL_PRIORITY_HIGH   = 1
 
-def open_db(dbname):
-	return MySQLdb.connect(db=dbname)
+def open_db(dbserver, dbname, dbuser, dbpwd):
+	return MySQLdb.connect(host=dbserver, user=dbuser, passwd=dbpwd, db=dbname)
 
 """ Base class of DB tables """
 class DBObj:
@@ -25,6 +25,14 @@ class DBObj:
 		cursor.execute("INSERT INTO {0} SET {1}".format(self.table_name, values))
 
 	@classmethod
+	def update_status_by_id(cls, cursor, id, newstatus):
+		"""
+		update records
+		"""
+		print "UPDATE {0} SET status = '{1}' WHERE id = {2}".format(cls.table_name, newstatus, id)
+		cursor.execute("UPDATE {0} SET status = '{1}' WHERE id = {2}".format(cls.table_name, newstatus, id))
+
+		
 	def insert_a_batch(self, cursor, records):
 		""" Insert a batch of records to the table
 		    recods: a list of records.
@@ -56,12 +64,18 @@ class DBObj:
 
 class Email(DBObj):
 	table_name = "email"
-	cols_names = ["address", "biz_id", "last_contacted", "priority"]
+	cols_names = ["address", "biz_id", "last_contacted", "priority", "domain"]
 	cols = ",".join(cols_names)
 		
 class Business(DBObj):
 	table_name = "business"
-	cols_names = ["name", "url", "phone", "category", "country", "status", "owner"]
+	cols_names = ["name", "url", "phone", "category", "location", "status", "owner", "domain"]
+	cols = ",".join(cols_names)
+	
+	
+class EmailList(DBObj):
+	table_name = "emaillist"
+	cols_names = ["address", "domain"]
 	cols = ",".join(cols_names)
 
 	
