@@ -8,6 +8,9 @@ EMAIL_PRIORITY_HIGH   = 1
 def open_db(dbname):
 	return MySQLdb.connect(db=dbname)
 
+def close_db(dbname):
+	pass
+
 """ Base class of DB tables """
 class DBObj:
 	@classmethod

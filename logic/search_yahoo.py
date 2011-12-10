@@ -38,12 +38,13 @@ class HotelProcessor:
         self.cvsWriter = csv.writer(f, delimiter='\t')
         
         
-    def showHotelList(self, location, searchfor='hotel', requestedSize=20):
+    def showHotelList(self, location, searchfor='hotel', requestedSize=20, max_round=250):
         searchfor = searchfor.strip()
         
         startPos = 0
         round = 1
         while 1:
+            print "Search Round:", round
             query = urllib.urlencode({'appid': YahooAppid, 
                                       'query': searchfor, 
                                       'results': requestedSize, 
@@ -54,6 +55,9 @@ class HotelProcessor:
             search_response = urllib.urlopen(url)
             search_results = search_response.read()
             results = simplejson.loads(search_results)
+            print results
+            if results is None:
+                continue
             resList = results['ResultSet']['Result']
                 
             for item in resList:
@@ -62,7 +66,7 @@ class HotelProcessor:
                     burl = item['BusinessUrl']
                     title = item['Title']
                     phone = item['Phone']
-                    
+                    print "---> ", burl, title, phone
                     #domain information
                     ext = tldextract.extract(burl)
                     domaintld = ext.domain + '.' + ext.tld
@@ -77,7 +81,7 @@ class HotelProcessor:
             startPos += requestedSize
             round += 1
             
-            if round >= 250:
+            if round >= max_round:
                 break 
             if len(resList) < 20:
                 break ;
@@ -85,6 +89,7 @@ class HotelProcessor:
             
     def storeInformation(self, l):
         self.cvsWriter.writerow(l)
+        print l
     
     
     #emails = re.findall('[a-zA-Z0-9+_\-\.]+@[0-9a-zA-Z][.-0-9a-zA-Z]*.[a-zA-Z]+', page)
@@ -130,9 +135,12 @@ class HotelProcessor:
             
         return list(Set(emailList))
 
-        
-HP = HotelProcessor()   
-HP.showHotelList('las vegas')    
+
+if __name__ == "__main__":
+    if len(sys.argv)>1 :
+        round = int(sys.argv[1])
+    HP = HotelProcessor()
+    HP.showHotelList('las vegas', max_round=round)    
     
 #searchEmail('www.mgmgrand.com', 'mgmgrand.com')
 
