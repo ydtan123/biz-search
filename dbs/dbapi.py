@@ -8,6 +8,9 @@ EMAIL_PRIORITY_HIGH   = 1
 def open_db(dbserver, dbname, dbuser, dbpwd):
 	return MySQLdb.connect(host=dbserver, user=dbuser, passwd=dbpwd, db=dbname)
 
+def close_db(db):
+	db.close()
+
 """ Base class of DB tables """
 class DBObj:
 	@classmethod
@@ -16,13 +19,15 @@ class DBObj:
 		*args: values of every column in the same order as defined
 		"""
 		values = ",".join(['"'+str(r)+'"' for r in args])
-		print "INSERT INTO {0} ({1}) VALUES ({2})".format(self.table_name, self.cols, values)
-		cursor.execute("INSERT INTO {0} ({1}) VALUES ({2})".format(self.table_name, self.cols, values))
+		cursor.execute("REPLACE INTO {0} ({1}) VALUES ({2})".format(self.table_name, self.cols, values))
 
 	@classmethod
 	def insert_one_by_names(self, cursor, **kwargs):
-		values = ",".join( "=".join([str(k), v]) for k,v in kwargs )
-		cursor.execute("INSERT INTO {0} SET {1}".format(self.table_name, values))
+		cols = []
+		for k,v in kwargs.iteritems():
+			cols.append("=".join([str(k), '"'+str(v)+'"']))
+		values = ",".join(cols)
+		cursor.execute("REPLACE INTO {0} SET {1}".format(self.table_name, values))
 
 	@classmethod
 	def update_status_by_id(cls, cursor, id, newstatus):
@@ -32,7 +37,7 @@ class DBObj:
 		print "UPDATE {0} SET status = '{1}' WHERE id = {2}".format(cls.table_name, newstatus, id)
 		cursor.execute("UPDATE {0} SET status = '{1}' WHERE id = {2}".format(cls.table_name, newstatus, id))
 
-		
+
 	def insert_a_batch(self, cursor, records):
 		""" Insert a batch of records to the table
 		    recods: a list of records.
@@ -44,13 +49,16 @@ class DBObj:
 	@classmethod
 	def fetch_by(self, cursor, cols, **kwargs):
 		where = []
-		print kwargs
 		for k,v in kwargs.iteritems():
 			where.append('{0}="{1}"'.format(k, str(v)))
-		cols = ",".join(cols) 
+		cols = ",".join(cols)
 		clause = " AND ".join(where)
-		cursor.execute("SELECT {0} FROM {1} WHERE {2}".format(cols, self.table_name, clause))  
+		cursor.execute("SELECT {0} FROM {1} WHERE {2}".format(cols, self.table_name, clause))
 		return cursor.fetchall()
+
+	@classmethod
+	def commit(self, cursor):
+		return cursor.execute("COMMIT")
 
 	@classmethod
 	def import_from_json(self, cursor, inputfile):
@@ -66,16 +74,16 @@ class Email(DBObj):
 	table_name = "email"
 	cols_names = ["address", "biz_id", "last_contacted", "priority", "domain"]
 	cols = ",".join(cols_names)
-		
+
 class Business(DBObj):
 	table_name = "business"
 	cols_names = ["name", "url", "phone", "category", "location", "status", "owner", "domain"]
 	cols = ",".join(cols_names)
-	
-	
+
+
 class EmailList(DBObj):
 	table_name = "emaillist"
 	cols_names = ["address", "domain"]
 	cols = ",".join(cols_names)
 
-	
+
