@@ -27,6 +27,7 @@ from sets import Set
 from scrapy.contrib.spiders import CrawlSpider, Rule
 from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from scrapy.item import Item
+from dbs.dbapi import Business, Email, open_db
 
 DBNAME = "biz-search"
 DBUSER = "aaaa"
@@ -39,19 +40,25 @@ EMAILRE = '[a-zA-Z0-9+_\-\.]+@[0-9a-zA-Z.]*'
 
 
 class InputManager(object):
+
+    @classmethod
+    def _domain_from_url(cls, url):
+        ext = tldextract.extract(url)
+        return ext.domain + '.' + ext.tld
+
     @classmethod
     def obtainURLs(cls):
         """
-        obtain unscanned URLs from business table. 
+        obtain unscanned URLs from business table.
         """
         urlList = ["http://www.ac-baidu.com"]
         domainList = ["ac-baidu.com"]
         return urlList, domainList
-    
+
     @classmethod
     def obtainURLsFromFiles(fileList):
         """
-        obtain unscanned URLs from business table. 
+        obtain unscanned URLs from business table.
         """
         urlList = []
         domainList = []
@@ -65,10 +72,10 @@ class InputManager(object):
                         urlList.append(row[1])
                         ext = tldextract.extract(theURL)
                         domaintld = ext.domain + '.' + ext.tld
-                        domainList.append(domaintld)                        
+                        domainList.append(domaintld)
             except:
                 continue
-        
+
         domainList = list(set(domainList))
         return urlList, domainList
 
@@ -76,62 +83,70 @@ class InputManager(object):
         domainList = 'yahoo.com'
         return urlList, domainList
 
-    
+
     @classmethod
-    def obtainURLsFromDB():
+    def obtainURLsFromDB(cls):
         """
-        obtain unscanned URLs from business table. 
+        obtain unscanned URLs from business table.
         """
-        return [], []
-    
-
-
-
+        with open_db(dbname='bizsearch') as bizdb:
+            dbitems = Business.fetch_by(bizdb, ['url', 'country'], "country='US'")
+            url_list = [ url for url,_ in dbitems ]
+            domain_list = [ cls._domain_from_url(d) for d in url_list ]
+        print url_list
+        print domain_list
+        return url_list, domain_list
 
 class MySpider(CrawlSpider):
-    """ Crawl through web sites you specify """   
+    """ Crawl through web sites you specify """
     name = "myspider"
 
     """
     obtain start_urls, allowed_domains
     """
-    start_urls, allowed_domains = InputManager.obtainURLs()
-     
+    #start_urls, allowed_domains = InputManager.obtainURLs()
+    start_urls, allowed_domains = InputManager.obtainURLsFromDB()
+
     #Add our callback which will be called for every found link
     rules = [
       Rule(SgmlLinkExtractor(), follow=True, callback="searchEmail")
     ]
-    
+
     def __init__(self, *a, **kw):
         super(MySpider, self).__init__(*a, **kw)
         self.emailList = []
         self.f = open('aaa', 'wb')
         self.csvWriter = csv.writer(self.f, delimiter = '\t')
-        
-               
+
+
     def searchEmail(self, response):
         """ Check a server response page (file) for possible violations """
-        if 'html' in response.headers.get("content-type", "").lower():
-            theURL = response.url
-            ext = tldextract.extract(theURL)
-            domaintld = ext.domain + '.' + ext.tld
-            
-            emailPattern = EMAILRE + domaintld
-            data = response.body
-            temp = re.findall(emailPattern, data) 
-            if len(temp) > 0:  
-                temp = list(set(temp))
-            
-            for email in temp:
-                self.csvWriter.writerow([email, domaintld])
-                self.f.flush()
-                print email, domaintld
+        try:
+            if 'html' in response.headers.get("content-type", "").lower():
+                theURL = response.url
+                ext = tldextract.extract(theURL)
+                domaintld = ext.domain + '.' + ext.tld
+
+                emailPattern = EMAILRE + domaintld
+                data = response.body
+                temp = re.findall(emailPattern, data)
+                if len(temp) > 0:
+                    temp = list(set(temp))
+
+                for email in temp:
+                    self.csvWriter.writerow([email, domaintld])
+                    self.f.flush()
+                    print email, domaintld
+                    with open_db("bizsearch") as emaildb:
+                        Email.insert_one_by_names(emaildb, address=email)
+        except:
+            pass
 
         return Item()
-            
 
 
-               
+
+
 def main():
     """Setups item signal and run the spider"""
     # set up signal to catch items scraped
@@ -147,7 +162,7 @@ def main():
     from scrapy.conf import settings
     settings.overrides['LOG_ENABLED'] = True
     settings.overrides['DEPTH_LIMIT'] = 2
-    
+
 
     # set up crawler
     from scrapy.crawler import CrawlerProcess
@@ -167,4 +182,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()   
+    main()

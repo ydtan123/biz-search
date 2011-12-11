@@ -5,8 +5,10 @@ EMAIL_PRIORITY_LOW    = 3
 EMAIL_PRIORITY_MEDIUM = 2
 EMAIL_PRIORITY_HIGH   = 1
 
-def open_db(dbserver, dbname, dbuser, dbpwd):
-	return MySQLdb.connect(host=dbserver, user=dbuser, passwd=dbpwd, db=dbname)
+#def open_db(dbserver, dbname, dbuser, dbpwd):
+#	return MySQLdb.connect(host=dbserver, user=dbuser, passwd=dbpwd, db=dbname)
+def open_db(dbname):
+	return MySQLdb.connect(db=dbname)
 
 def close_db(db):
 	db.close()
@@ -47,13 +49,20 @@ class DBObj:
 			self.insert_one_by_value(cursor, *r)
 
 	@classmethod
-	def fetch_by(self, cursor, cols, **kwargs):
-		where = []
-		for k,v in kwargs.iteritems():
-			where.append('{0}="{1}"'.format(k, str(v)))
+	def fetch_by(self, cursor, cols, limit=0, *args):
+		""" cols: columns to fetch
+		    args: select conditions
+	        """
 		cols = ",".join(cols)
-		clause = " AND ".join(where)
-		cursor.execute("SELECT {0} FROM {1} WHERE {2}".format(cols, self.table_name, clause))
+		cmd = "SELECT {0} FROM {1}".format(cols, self.table_name)
+		print "---" , args
+		if args:
+			clause = " AND ".join(args)
+			cmd += " WHERE {0}".format(clause)
+		if limit != 0:
+			cmd += " LIMIT {0}".format(limit)
+		print "+++", cmd
+		cursor.execute(cmd)
 		return cursor.fetchall()
 
 	@classmethod
