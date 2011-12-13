@@ -15,7 +15,7 @@ DEFAULT_ITEM_CLASS = 'hotelbase_scraper.items.BizItem'
 USER_AGENT = '%s/%s' % (BOT_NAME, BOT_VERSION)
 ITEM_PIPELINES = [ 'hotelbase_scraper.pipelines.HotelBaseScraperPipeline' ]
 
-DEPTH_LIMIT = 1
+DEPTH_LIMIT = 3
 
 
 

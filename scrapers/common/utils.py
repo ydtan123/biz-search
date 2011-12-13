@@ -7,8 +7,8 @@ def obtainURLsFromText():
     domainList = []
     with open('url.list') as furl:
         for line in furl:
-            line.strip()
-            if (len(line)>0):
+            line = line.strip()
+            if (line):
                 urlList.append(line)
                 ext = tldextract.extract(line)
                 domaintld = ext.domain + '.' + ext.tld

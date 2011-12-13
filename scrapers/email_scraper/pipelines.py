@@ -6,7 +6,7 @@ from dbs.dbapi import Business, open_db
 
 class HotelBaseScraperPipeline(object):
     def __init__(self):
-        self.conn = open_db("bizsearch_work")
+        self.conn = open_db("bizsearch")
         self.dbcursor = self.conn.cursor()
 
     def __del__(self):

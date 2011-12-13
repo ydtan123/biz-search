@@ -14,5 +14,5 @@ class BizItem(Item):
     address = Field()
 
     def __str__(self):
-        return "BizURL: name=%s url=%s address=%s" % (self['name'], self['url'], self['address'])
+        return "BizURL: name=%s url=%s phone=%s" % (self['name'], self['url'], self['phone'])
 
