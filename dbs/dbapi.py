@@ -5,10 +5,8 @@ EMAIL_PRIORITY_LOW    = 3
 EMAIL_PRIORITY_MEDIUM = 2
 EMAIL_PRIORITY_HIGH   = 1
 
-#def open_db(dbserver, dbname, dbuser, dbpwd):
-#	return MySQLdb.connect(host=dbserver, user=dbuser, passwd=dbpwd, db=dbname)
-def open_db(dbname):
-	return MySQLdb.connect(db=dbname)
+def open_db(dbname, **kwargs):
+	return MySQLdb.connect(db=dbname, **kwargs)
 
 def close_db(db):
 	db.close()

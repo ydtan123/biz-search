@@ -12,14 +12,14 @@ from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from scrapy.selector import HtmlXPathSelector
 
 from scrapers.common.items import BizItem
-from scrapers.common import utils
+from common.utils import InputManager
 
 class HotelBaseScraper(CrawlSpider):
     """ Crawl through web sites you specify """
 
     name = "hotelbase_scraper"
 
-    start_urls,_ = utils.obtainURLsFromText()
+    start_urls,_ = InputManager.obtainURLsFromText()
     allowed_domains = ["hotel-base.com"]
 
     # Add our callback which will be called for every found link

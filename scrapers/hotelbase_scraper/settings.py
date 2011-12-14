@@ -13,7 +13,7 @@ SPIDER_MODULES = ['hotelbase_scraper.spiders']
 NEWSPIDER_MODULE = 'hotelbase_scraper.spiders'
 DEFAULT_ITEM_CLASS = 'hotelbase_scraper.items.BizItem'
 USER_AGENT = '%s/%s' % (BOT_NAME, BOT_VERSION)
-ITEM_PIPELINES = [ 'hotelbase_scraper.pipelines.HotelBaseScraperPipeline' ]
+ITEM_PIPELINES = [ 'scrapers.common.pipelines.BizPipeline' ]
 
 DEPTH_LIMIT = 1
 
