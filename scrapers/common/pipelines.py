@@ -6,7 +6,6 @@ from dbs.dbapi import Business, Email, open_db, close_db
 
 class BasePipeline(object):
     def __init__(self):
-        print "++++++++ In base pipeline"
         self.conn = open_db("bizsearch_work")
         self.dbcursor = self.conn.cursor()
 
@@ -21,7 +20,6 @@ class BasePipeline(object):
 
 class BizPipeline(BasePipeline):
     def __init__(self):
-        print "+++++++++ bizpipeline"
         super(BizPipeline, self).__init__()
         self.table = Business
 

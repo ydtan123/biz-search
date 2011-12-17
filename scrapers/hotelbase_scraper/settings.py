@@ -9,8 +9,8 @@
 BOT_NAME = 'hotelbase_scraper'
 BOT_VERSION = '1.0'
 
-SPIDER_MODULES = ['hotelbase_scraper.spiders']
-NEWSPIDER_MODULE = 'hotelbase_scraper.spiders'
+SPIDER_MODULES = ['hotelbase_scraper']
+NEWSPIDER_MODULE = 'hotelbase_scraper'
 DEFAULT_ITEM_CLASS = 'hotelbase_scraper.items.BizItem'
 USER_AGENT = '%s/%s' % (BOT_NAME, BOT_VERSION)
 ITEM_PIPELINES = [ 'scrapers.common.pipelines.BizPipeline' ]
