@@ -1,8 +1,9 @@
 import tldextract
+from dbs.dbapi import Business, Email, open_db, close_db
 
 EMAILRE = '[a-zA-Z0-9+_\-\.]+@[0-9a-zA-Z.]*'
 
-def domain_from_url(cls, url):
+def domain_from_url(url):
     ext = tldextract.extract(url)
     return ext.domain + '.' + ext.tld
 
@@ -46,7 +47,7 @@ class InputManager(object):
         obtain unscanned URLs from business table.
         """
         with open_db(dbname='bizsearch') as bizdb:
-            dbitems = table.fetch_by(bizdb, ['url', 'country'], "country='US'")
+            dbitems = table.fetch_by(bizdb, ['url', 'country'], 0, "country='US'")
             url_list = [ url for url,_ in dbitems ]
             domain_list = [ domain_from_url(d) for d in url_list ]
         print url_list

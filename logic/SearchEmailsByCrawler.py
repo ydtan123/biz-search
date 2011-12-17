@@ -28,7 +28,9 @@ from scrapy.contrib.spiders import CrawlSpider, Rule
 from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from scrapy.item import Item
 from dbs.dbapi import Business, Email, open_db
-from common.utils import InputManager, EMAILRE domain_from_url
+from common.utils import InputManager, EMAILRE, domain_from_url
+
+URL_INPUT = 'db'
 
 class MySpider(CrawlSpider):
     """ Crawl through web sites you specify """
@@ -38,44 +40,40 @@ class MySpider(CrawlSpider):
     obtain start_urls, allowed_domains
     """
     #start_urls, allowed_domains = InputManager.obtainURLs()
-    start_urls, allowed_domains = self.obtainURL()
 
     #Add our callback which will be called for every found link
     rules = [
       Rule(SgmlLinkExtractor(), follow=True, callback="searchEmail")
     ]
+    if URL_INPUT=='db':
+        start_urls, allowed_domains = InputManager.obtainURLsFromDB()
+    else:
+        start_urls, allowed_domains = InputManager.obtainURLsFromText()
 
-    def __init__(self, from='db', to='db', dbname='bizsearch',dbpwd=None, *a, **kw):
-        super(MySpider, self).__init__(*a, **kw)
+    def __init__(self, input='db', output='db', dbname='bizsearch',dbpwd=None, *args, **kwargs):
+        super(MySpider, self).__init__(*args, **kwargs)
         self.emailList = []
 
-        self.from = from
-        self.to = to
+        self.output = output
 
-        if from == 'db':
-            self.obtainURL = InputManager.obtainURLsFromDB
-        else:
-            self.obtainURL = InputManager.obtainURLsFromText
-
-        if to == 'db':
-            self.dbcursor = open_db(db=dbname).cursor()
+        if output == 'db':
+            self.dbcursor = open_db(dbname).cursor()
         else:
             self.f = open('results.list', 'wb')
-            assert(self.f is not None, "Cannot open %s" % to)
             self.csvWriter = csv.writer(self.f, delimiter = '\t')
 
     def __del__(self):
-        if self.to == 'db':
+        if self.output == 'db':
             close_db(self.dbcursor)
         else:
             self.f.close()
 
     def _write_out_one_item(self, **kwargs):
-        if self.to == 'db':
+        if self.output == 'db':
             Email.insert_one_by_names(self.dbcursor, kwargs)
         else:
             items = []
-            for k.v in kwargs.iteritems():
+            for k,v in kwargs.iteritems():
                 items.append(v)
             self.csvWriter.writerow(items)
             self.f.flush()
@@ -92,22 +90,22 @@ class MySpider(CrawlSpider):
                     temp = list(set(temp))
 
                 for email in temp:
-                    _write_out_one_item(address=email)
+                    self._write_out_one_item(address=email)
 
         except:
             pass
 
         return Item()
 
-def parse_args()
+def parse_args():
     optparser = optparse.OptionParser()
-    optparser.add_option('-i', '--from',
-                         dest='from',
+    optparser.add_option('-i', '--input',
+                         dest='input',
                          default='business',
                          help='Input of urls. If db, urls are retrieved from db. Otherwise, from a text file.'
                          )
-    optparser.add_option('-o', '--to',
-                         dest='to',
+    optparser.add_option('-o', '--output',
+                         dest='output',
                          default='email',
                          help='Output of emails. If db, emails are written to db. Otherwise, to a csv file.'
                          )
@@ -116,6 +114,7 @@ def parse_args()
                          help='DB password'
                          )
     options, remainder = optparser.parse_args()
+    URL_INPUT = options.input
     return options
 
 def main():
@@ -145,7 +144,7 @@ def main():
     crawler.configure()
 
     # schedule spider
-    spider = MySpider(from=options.from, to=options.to)
+    spider = MySpider(input=options.input, output=options.output)
     crawler.queue.append_spider(spider)
 
     # start engine scrapy/twisted
